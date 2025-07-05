@@ -13,6 +13,11 @@ services:
     build: ./monitor-agent
     depends_on:
       - db
+  
+  viaipe:
+    build: ./viaipe-agent
+    depends_on:
+      - db
 
   grafana:
     image: grafana/grafana
