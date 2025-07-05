@@ -1,0 +1,28 @@
+services:
+  db:
+    image: postgres
+    environment:
+      POSTGRES_DB: monitor
+      POSTGRES_USER: monitor
+      POSTGRES_PASSWORD: monitor
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+      - ./db-init:/docker-entrypoint-initdb.d  
+
+  agent:
+    build: ./monitor-agent
+    depends_on:
+      - db
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-storage:/var/lib/grafana
+
+volumes:
+  dbdata:
+  grafana-storage:
