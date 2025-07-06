@@ -151,6 +151,48 @@ Segurança: Acesso ao Grafana protegido por senha.
 +-------- +    +--------+
 ```
 
+## 8. Execução
+
+Para executar o projeto basta executar o comando:
+
+```python
+docker compose up --build -d
+```
+
+E acessar em um navegador o grafana na url:
+[localhost:3000](http://localhost:3000/)
+
+O login do grafana é com as credenciais:
+
+user: admin
+
+password: admin
+
+Ele solicitará a troca de senha e pode ser trocada para qualquer uma ou manter admin.
+
+Os dashboards podem ser importados na aba dashboard do grafana e os arquivos json estão na raiz do projeto:
+
+- dashboard.json
+- viaipe_dashboard.json
+
+O banco utilizado foi o postgres e se for necessário configurar o datasource no grafana utilizar:
+
+Name: monitor
+
+Host: db:5432
+
+Database: monitor
+
+User: monitor
+
+Password: monitor
+
+SSL Mode: disable
+
+Version: Auto (deixe como está)
+
+Min time interval: 30s ou 1m
+
 ## Questão 2 - Experiências com DevOps, Automação e Monitoramento
 
 Embora eu não possua projetos públicos no GitHub relacionados a DevOps, automação ou monitoramento, destaco abaixo algumas **experiências profissionais relevantes** realizadas em ambientes corporativos com repositórios privados:
