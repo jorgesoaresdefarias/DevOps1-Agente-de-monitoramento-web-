@@ -150,3 +150,25 @@ Segurança: Acesso ao Grafana protegido por senha.
 |  agent  |    | agent  |
 +-------- +    +--------+
 ```
+
+## Questão 2 - Experiências com DevOps, Automação e Monitoramento
+
+Embora eu não possua projetos públicos no GitHub relacionados a DevOps, automação ou monitoramento, destaco abaixo algumas **experiências profissionais relevantes** realizadas em ambientes corporativos com repositórios privados:
+
+### Orquestração de Containers e Clusters
+
+- Atuei na **orquestração de containers Docker** e na administração de clusters **Kubernetes**, aplicando boas práticas de infraestrutura como código.
+
+### Infraestrutura como Código com Terraform
+
+- Utilizei **Terraform** em projetos de **migração de infraestrutura entre provedores de cloud**, automatizando a troca de serviços com segurança, versionamento e reprodutibilidade.
+
+### Automação com Ansible
+
+- Desenvolvi **playbooks com Ansible** para a **atualização de certificados SSL** em múltiplas máquinas virtuais, reduzindo erros manuais e tempo de execução das tarefas.
+
+---
+
+Infelizmente, por se tratarem de projetos corporativos e confidenciais, **não é possível compartilhar os repositórios privados** onde essas atividades foram implementadas. No entanto, estou à disposição para detalhar tecnicamente qualquer uma dessas experiências durante a entrevista.
+
+Caso desejem, posso também desenvolver uma **prova prática ou projeto demonstrativo** para exemplificar essas habilidades, conforme necessidade do processo seletivo.
