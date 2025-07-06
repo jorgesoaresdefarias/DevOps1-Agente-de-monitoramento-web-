@@ -18,36 +18,30 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 1,
+  "id": 2,
   "links": [],
   "panels": [
     {
       "datasource": {
         "type": "grafana-postgresql-datasource",
-        "uid": "fer1afr8h94hsb"
+        "uid": "eer49yjz1ys5cf"
       },
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "inspect": false
-          },
           "mappings": [],
           "thresholds": {
-            "mode": "absolute",
+            "mode": "percentage",
             "steps": [
               {
                 "color": "green"
               },
               {
+                "color": "orange",
+                "value": 70
+              },
+              {
                 "color": "red",
-                "value": 80
+                "value": 85
               }
             ]
           }
@@ -60,18 +54,21 @@
         "x": 0,
         "y": 0
       },
-      "id": 4,
+      "id": 5,
       "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
           ],
-          "show": false
+          "fields": "",
+          "values": false
         },
-        "showHeader": true
+        "showThresholdLabels": false,
+        "showThresholdMarkers": false,
+        "sizing": "auto"
       },
       "pluginVersion": "12.0.2",
       "targets": [
@@ -79,7 +76,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\r\n  target,\r\n  value2 AS status_code,\r\n  COUNT(*) AS total\r\nFROM http_results\r\nWHERE $__timeFilter(timestamp)\r\nGROUP BY target, value2\r\nORDER BY total DESC",
+          "rawSql": "SELECT\r\n  date_trunc('minute', timestamp) AS time,\r\n  target,\r\n  value2 AS status_code,\r\n  COUNT(*) AS total\r\nFROM http_results\r\nWHERE $__timeFilter(timestamp)\r\nGROUP BY time, target, status_code\r\nORDER BY time ASC",
           "refId": "A",
           "sql": {
             "columns": [
@@ -100,13 +97,13 @@
           }
         }
       ],
-      "title": "Status Code HTTP table",
-      "type": "table"
+      "title": " HTTP - Distribution of HTTP codes over time",
+      "type": "gauge"
     },
     {
       "datasource": {
         "type": "grafana-postgresql-datasource",
-        "uid": "fer1afr8h94hsb"
+        "uid": "eer49yjz1ys5cf"
       },
       "fieldConfig": {
         "defaults": {
@@ -119,28 +116,16 @@
             "axisColorMode": "text",
             "axisLabel": "",
             "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 0,
+            "fillOpacity": 80,
             "gradientMode": "none",
             "hideFrom": {
               "legend": false,
               "tooltip": false,
               "viz": false
             },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
             "lineWidth": 1,
-            "pointSize": 5,
             "scaleDistribution": {
               "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
             },
             "thresholdsStyle": {
               "mode": "off"
@@ -158,7 +143,8 @@
                 "value": 80
               }
             ]
-          }
+          },
+          "unit": "short"
         },
         "overrides": []
       },
@@ -168,27 +154,36 @@
         "x": 0,
         "y": 8
       },
-      "id": 3,
+      "id": 4,
       "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
         "legend": {
           "calcs": [],
           "displayMode": "list",
-          "placement": "bottom",
+          "placement": "right",
           "showLegend": true
         },
+        "orientation": "auto",
+        "showValue": "never",
+        "stacking": "none",
         "tooltip": {
           "hideZeros": false,
           "mode": "single",
           "sort": "none"
-        }
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
       },
       "pluginVersion": "12.0.2",
       "targets": [
         {
           "editorMode": "code",
-          "format": "time_series",
+          "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\r\n  timestamp AS \"time\",\r\n  target,\r\n  value1 AS load_time\r\nFROM http_results\r\nWHERE $__timeFilter(timestamp)\r\n",
+          "rawSql": "SELECT\r\n  target,\r\n  value2 AS status_code,\r\n  COUNT(*) AS total\r\nFROM http_results\r\nWHERE $__timeFilter(timestamp)\r\nGROUP BY target, value2\r\nORDER BY target, total DESC",
           "refId": "A",
           "sql": {
             "columns": [
@@ -209,13 +204,13 @@
           }
         }
       ],
-      "title": "Load Time",
-      "type": "timeseries"
+      "title": " HTTP - Per Host HTTP Status Codes",
+      "type": "barchart"
     },
     {
       "datasource": {
         "type": "grafana-postgresql-datasource",
-        "uid": "fer1afr8h94hsb"
+        "uid": "eer49yjz1ys5cf"
       },
       "fieldConfig": {
         "defaults": {
@@ -277,7 +272,7 @@
         "x": 0,
         "y": 16
       },
-      "id": 2,
+      "id": 3,
       "options": {
         "legend": {
           "calcs": [],
@@ -297,7 +292,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT\r\n  timestamp AS \"time\",\r\n  target,\r\n  value2 AS packet_loss\r\nFROM ping_results\r\nWHERE $__timeFilter(timestamp)",
+          "rawSql": "SELECT\r\n  date_trunc('minute', timestamp) AS time,\r\n  target,\r\n  AVG(value1) AS avg_load_time_s\r\nFROM http_results\r\nWHERE $__timeFilter(timestamp)\r\nGROUP BY time, target\r\nORDER BY time ASC",
           "refId": "A",
           "sql": {
             "columns": [
@@ -318,13 +313,120 @@
           }
         }
       ],
-      "title": "Packet Loss",
+      "title": " HTTP - Average load time per host over time",
       "type": "timeseries"
     },
     {
       "datasource": {
         "type": "grafana-postgresql-datasource",
-        "uid": "fer1afr8h94hsb"
+        "uid": "eer49yjz1ys5cf"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 24
+      },
+      "id": 2,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "right",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "never",
+        "stacking": "none",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "12.0.2",
+      "targets": [
+        {
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n  target,\r\n  AVG(value1) AS avg_latency_ms,\r\n  AVG(value2) AS avg_packet_loss_pct,\r\n  COUNT(*) AS samples_count\r\nFROM ping_results\r\nWHERE $__timeFilter(timestamp)\r\nGROUP BY target\r\nORDER BY avg_latency_ms ASC\r\n",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Ping - Average Latency and Average Loss",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "eer49yjz1ys5cf"
       },
       "fieldConfig": {
         "defaults": {
@@ -384,7 +486,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 24
+        "y": 32
       },
       "id": 1,
       "options": {
@@ -405,12 +507,12 @@
         {
           "datasource": {
             "type": "grafana-postgresql-datasource",
-            "uid": "fer1afr8h94hsb"
+            "uid": "eer49yjz1ys5cf"
           },
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT\r\n  timestamp AS \"time\",\r\n  target,\r\n  value1 AS rtt\r\nFROM ping_results\r\nWHERE $__timeFilter(timestamp)",
+          "rawSql": "SELECT\r\n  date_trunc('minute', timestamp) AS time,\r\n  target,\r\n  AVG(value1) AS avg_latency_ms,\r\n  AVG(value2) AS avg_packet_loss_pct\r\nFROM ping_results\r\nWHERE $__timeFilter(timestamp)\r\nGROUP BY time, target\r\nORDER BY time ASC\r\n",
           "refId": "A",
           "sql": {
             "columns": [
@@ -431,7 +533,7 @@
           }
         }
       ],
-      "title": "Gráfico de RTT ",
+      "title": " Average latency over time",
       "type": "timeseries"
     }
   ],
@@ -442,12 +544,12 @@
     "list": []
   },
   "time": {
-    "from": "2025-07-05T17:32:29.600Z",
-    "to": "2025-07-05T17:38:50.419Z"
+    "from": "2025-07-06T13:35:05.147Z",
+    "to": "2025-07-06T13:50:13.529Z"
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "Project-DevOps",
-  "uid": "e33262bd-e9c5-4f9c-a521-7e940998f1cc",
-  "version": 2
+  "title": "Project",
+  "uid": "8d66ddbd-6521-4b80-a0fc-fc5003a9acbc",
+  "version": 1
 }

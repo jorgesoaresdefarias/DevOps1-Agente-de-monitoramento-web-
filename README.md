@@ -4,13 +4,13 @@
 
 ## 1. Visão Geral do Sistema
 
-O sistema tem como objetivo monitorar a qualidade de conexão e disponibilidade de alguns serviços web, realizando testes periódicos de ping e acesso HTTP a URLs específicas. Os resultados são armazenados em banco de dados e visualizados em dashboards Grafana para análise.
+O sistema tem como objetivo monitorar a qualidade de conexão e disponibilidade de alguns serviços web, realizando testes periódicos de ping, acesso HTTP e coleta de estatísticas de APIs externas como o **ViaIpe**. Os resultados são armazenados em banco de dados e visualizados em dashboards Grafana para análise.
 
----
+## ⚠️ Aviso: Os prints de tela dos dashboards do Grafana estão localizados no diretório images.
 
 ## 2. Componentes Principais
 
-### 2.1. Agent de Monitoramento (monitor-agent)
+### 2.1. Agent de Monitoramento (`monitor-agent`)
 
 - **Descrição:** Aplicação Python que executa periodicamente testes de rede.
 - **Funções:**
@@ -19,87 +19,122 @@ O sistema tem como objetivo monitorar a qualidade de conexão e disponibilidade 
   - Inserir os dados coletados no banco de dados PostgreSQL.
 - **Implantação:** Empacotado em um container Docker, executado continuamente com intervalo configurável.
 
----
+### 2.2. Agent ViaIpe (`viaipe-agent`)
 
-### 2.2. Banco de Dados (PostgreSQL)
+- **Descrição:** Aplicação Python separada, responsável por consultar a API externa ViaIpe.
+- **Funções:**
+  - Acessar periodicamente a API do ViaIpe.
+  - Coletar métricas de disponibilidade por cliente.
+  - Inserir os dados coletados na tabela `viaipe_stats` no banco de dados PostgreSQL.
+- **Implantação:** Empacotado em um container Docker independente, com execução periódica configurável.
 
-- **Descrição:** Armazena os resultados dos testes realizados pelo agent.
+### 2.3. Banco de Dados (PostgreSQL)
+
+- **Descrição:** Armazena os resultados dos testes realizados pelos agentes.
 - **Estrutura:**
-  - Tabela `ping_results`: armazenando timestamp, host, RTT, perda de pacotes.
-  - Tabela `http_results`: armazenando timestamp, URL, tempo de carregamento, código HTTP.
+  - Tabela `ping_results`: armazenando `timestamp`, `host`, `RTT`, perda de pacotes.
+  - Tabela `http_results`: armazenando `timestamp`, `URL`, tempo de carregamento, código HTTP.
+  - Tabela `viaipe_stats`: armazenando `timestamp`, `cliente`, `disponibilidade` e outros campos extraídos da API do ViaIpe.
 - **Implantação:** Rodando em container Docker com volume persistente para garantir durabilidade dos dados.
 
----
-
-### 2.3. Visualização (Grafana)
+### 2.4. Visualização (Grafana)
 
 - **Descrição:** Plataforma de dashboards para visualização dos dados coletados.
 - **Funções:**
   - Conectar ao PostgreSQL para consulta dos dados.
   - Exibir gráficos de latência, perda de pacotes, tempos de carregamento e status HTTP.
-  - Permitir filtro de tempo e detalhamento por URL/host.
+  - Exibir dashboards com a **qualidade da conexão por cliente ao longo do tempo**, com base nos dados da API ViaIpe.
+  - Permitir filtro de tempo e detalhamento por URL/host/cliente.
 - **Implantação:** Container Docker configurado para expor interface web na porta 3000.
-  - O resultado do dashboard grafana pode ser encontrado no arquivo dashboard.json.
+  - O resultado do dashboard principal está no arquivo `dashboard.json`.
+  - O dashboard do ViaIpe está no arquivo `viaipe_dashboard.json`.
 
 ---
 
 ## 3. Fluxo de Dados
 
-1. O `monitor-agent` executa os testes a cada intervalo (ex: 60 segundos).
-2. Resultados são inseridos nas tabelas `ping_results` e `http_results` no banco PostgreSQL.
-3. Grafana consulta periodicamente o banco e atualiza dashboards com gráficos e tabelas.
-4. Usuário acessa o Grafana via navegador para análise e monitoramento.
+1. O `monitor-agent` executa testes de rede a cada intervalo configurado (ex: 60 segundos).
+2. O `viaipe-agent` consulta periodicamente a API do ViaIpe e coleta métricas por cliente.
+3. Os resultados são inseridos nas tabelas `ping_results`, `http_results` e `viaipe_stats` no banco PostgreSQL.
+4. Grafana consulta periodicamente o banco e atualiza os dashboards com gráficos e tabelas.
+5. Usuário acessa o Grafana via navegador para análise e monitoramento.
 
 ---
 
 ## 4. Arquitetura e Comunicação
 
-```
-+-------------------+           +-------------------+           +-------------------+
-|                   |  Inserts  |                   |  Queries  |                   |
-|   monitor-agent    +---------->   PostgreSQL      +---------->     Grafana        |
-| (Docker Container) |          | (Docker Container)|           | (Docker Container)|
-+-------------------+           +-------------------+           +-------------------+
+```plaintext
+                    +---------------------+
+                    |    monitor-agent    |
+                    |  (ping + HTTP)      |
+                    +----------+----------+
+                               |
+                               | INSERTs
+                               v
+                    +----------+----------+
+                    |    PostgreSQL DB    |
+                    |    (via Docker)     |
+                    +----------+----------+
+                               ^
+                               | INSERTs
+                    +----------+----------+
+                    |     viaipe-agent     |
+                    |  (consulta à API)    |
+                    +----------------------+
+
+                    +----------------------+
+                    |       Grafana        |
+                    | (dashboards via web) |
+                    +----------+-----------+
+                               |
+                               | Queries
+                               v
+                    +----------------------+
+                    |    viaipe_stats      |
+                    |   (PostgreSQL table) |
+                    +----------------------+
+
 ```
 
-- Os containers estão orquestrados via Docker Compose, compartilhando uma rede virtual Docker.
-- `monitor-agent` conecta ao banco pelo hostname `db` (nome do serviço Docker).
-- Grafana conecta ao banco pelo mesmo hostname para leitura dos dados.
+Os containers estão orquestrados via Docker Compose, compartilhando uma rede virtual Docker.
 
----
+Ambos os agentes (monitor-agent e viaipe-agent) conectam ao banco pelo hostname db.
+
+Grafana conecta ao banco pelo mesmo hostname para leitura dos dados.
 
 ## 5. Tecnologias Utilizadas
 
 | Componente     | Tecnologia / Ferramenta         |
 | -------------- | ------------------------------- |
-| Agent          | Python 3.10, Requests, psycopg2 |
+| monitor-agent  | Python 3.10, Requests, psycopg2 |
+| viaipe-agent   | Python 3.10, Requests, psycopg2 |
 | Banco de Dados | PostgreSQL 15                   |
 | Visualização   | Grafana 10                      |
 | Orquestração   | Docker, Docker Compose          |
-
----
+| API Externa    | ViaIpe                          |
 
 ## 6. Requisitos Não Funcionais
 
-- **Disponibilidade:** O sistema deve rodar 24/7 com auto-recuperação via Docker.
-- **Persistência:** Dados armazenados devem ser preservados mesmo após reinício do container.
-- **Escalabilidade:** Fácil adição de novos hosts URLs para monitoramento.
-- **Segurança:** Acesso ao Grafana protegido por senha.
+Disponibilidade: O sistema deve rodar 24/7 com auto-recuperação via Docker.
 
----
+Persistência: Dados armazenados devem ser preservados mesmo após reinício dos containers.
+
+Escalabilidade: Fácil adição de novos hosts, URLs e clientes da API para monitoramento.
+
+Segurança: Acesso ao Grafana protegido por senha.
 
 ## 7. Diagrama Simplificado
 
-```plaintext
+```
 +------------------------+
 |        Usuário         |
 | (acesso via browser)   |
 +-----------+------------+
             |
             v
-+-----------+------------+
-|         Grafana        |
-| (dashboard e query SQL)|
++-----------+------------+               +---------------------------+
+|         Grafana        | <-----------  |  viaipe_stats (PostgreSQL)|
+| (dashboard e query SQL)|               +---------------------------+
 +-----------+------------+
             |
             v
@@ -107,10 +142,11 @@ O sistema tem como objetivo monitorar a qualidade de conexão e disponibilidade 
 |       PostgreSQL       |
 |  (armazena resultados) |
 +-----------+------------+
-            ^
-            |
-+-----------+------------+
-|    monitor-agent       |
-| (realiza testes e insere dados) |
-+------------------------+
+     ^            ^
+     |            |
+     |            |
++----+---+    +---+-----+
+| monitor |    | viaipe |
+|  agent  |    | agent  |
++-------- +    +--------+
 ```
